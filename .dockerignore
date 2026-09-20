@@ -1,0 +1,33 @@
+# Dependencies — never copy node_modules into the image
+node_modules
+**/node_modules
+
+# Secrets — never bake credentials into the image
+.env
+.env.*
+
+# Frontend — not needed by the backend server
+frontend/
+
+# Build artifacts
+frontend/dist
+
+# Version control
+.git
+.gitignore
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+
+# Supabase local dev files (not needed in container)
+supabase/

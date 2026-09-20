@@ -6,9 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node test_api.js",
-    "test:cron": "node test_cron.js",
-    "postinstall": "npx playwright install chromium --with-deps"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
