@@ -11,6 +11,37 @@ function log(msg) {
     console.log(`[SCRAPER] ${msg}`);
 }
 
+let globalBrowser = null;
+let globalBrowserHeadless = null;
+
+async function getBrowser(headless) {
+    if (globalBrowser) {
+        if (!globalBrowser.isConnected() || globalBrowserHeadless !== headless) {
+            log('Browser disconnected or headless mode changed. Closing old instance...');
+            await globalBrowser.close().catch(() => {});
+            globalBrowser = null;
+        }
+    }
+    
+    if (!globalBrowser) {
+        log('Launching global browser instance...');
+        globalBrowser = await chromium.launch({ headless });
+        globalBrowserHeadless = headless;
+    }
+    return globalBrowser;
+}
+
+const cleanupBrowser = async () => {
+    if (globalBrowser) {
+        await globalBrowser.close().catch(() => {});
+        globalBrowser = null;
+    }
+};
+
+process.on('SIGINT', async () => { await cleanupBrowser(); process.exit(0); });
+process.on('SIGTERM', async () => { await cleanupBrowser(); process.exit(0); });
+process.on('exit', cleanupBrowser);
+
 /**
  * Validates the scraped data.
  */
@@ -38,11 +69,10 @@ async function scrapeProduct(productUrl, options = {}) {
 
     while (attempt <= maxAttempts) {
         log(`Attempt ${attempt}/${maxAttempts} for ${productUrl}`);
-        let browser = null;
+        let context = null;
         try {
-            log('Launching browser...');
-            browser = await chromium.launch({ headless });
-            const context = await browser.newContext();
+            const browser = await getBrowser(headless);
+            context = await browser.newContext();
             const page = await context.newPage();
             page.setDefaultTimeout(timeout);
 
@@ -140,7 +170,7 @@ async function scrapeProduct(productUrl, options = {}) {
                     log('Validation successful');
                     log('SUCCESS');
                     attemptHistory.push({ attempt, status: 'SUCCESS', error: null });
-                    await browser.close();
+                    if (context) await context.close().catch(() => {});
                     return {
                         success: true,
                         product: result,
@@ -157,8 +187,8 @@ async function scrapeProduct(productUrl, options = {}) {
         } catch (e) {
             error = e.message;
             log(`Failure: ${error}`);
-            if (browser) {
-                await browser.close().catch(() => {});
+            if (context) {
+                await context.close().catch(() => {});
             }
             
             // Do not retry on permanent errors
@@ -206,8 +236,17 @@ if (require.main === module) {
     
     console.log(`\nStarting scrape test for ${testUrl} (headless: ${headless})\n`);
     
-    scrapeProduct(testUrl, { headless }).then(result => {
-        console.log('\n--- Final Result ---');
-        console.log(JSON.stringify(result, null, 2));
-    }).catch(console.error);
+    (async () => {
+        const start1 = Date.now();
+        const res1 = await scrapeProduct(testUrl, { headless });
+        console.log(`\n--- First Scrape (${Date.now() - start1}ms) ---`);
+        console.log(JSON.stringify(res1, null, 2));
+
+        const start2 = Date.now();
+        const res2 = await scrapeProduct(testUrl, { headless });
+        console.log(`\n--- Second Scrape (${Date.now() - start2}ms) ---`);
+        console.log(JSON.stringify(res2, null, 2));
+        
+        process.exit(0);
+    })();
 }
