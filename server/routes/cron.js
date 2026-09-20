@@ -182,7 +182,15 @@ router.post('/scrape-all', async (req, res) => {
     runSummary.completed_at = new Date().toISOString();
     console.log(`[CRON] Scheduled run completed: ${runSummary.succeeded} succeeded, ${runSummary.failed} failed, ${runSummary.skipped} skipped`);
     
-    res.json(runSummary);
+    // Return only a compact summary — detailed per-product arrays are logged above
+    // but omitted from the HTTP response to stay within cron-job.org payload limits.
+    res.json({
+        success: true,
+        message: 'Cron scrape completed',
+        processed: runSummary.total,
+        succeeded: runSummary.succeeded,
+        failed: runSummary.failed,
+    });
 });
 
 module.exports = router;
