@@ -1,0 +1,27 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node test_api.js",
+    "test:cron": "node test_cron.js",
+    "postinstall": "npx playwright install chromium --with-deps"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.1",
+    "express": "^5.2.1",
+    "playwright": "^1.63.0"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2"
+  }
+}
