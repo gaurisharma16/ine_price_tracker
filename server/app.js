@@ -11,7 +11,7 @@ const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
 app.use(cors({
     origin: allowedOrigin,
     methods: ['GET', 'POST', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type'],
+    allowedHeaders: ['Content-Type', 'x-client-id'],
 }));
 
 // Body parsing
