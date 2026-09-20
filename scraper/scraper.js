@@ -108,16 +108,16 @@ async function scrapeProduct(productUrl, options = {}) {
                 // Wait for the "dwell" time requirement (minDwellMs = 600)
                 await page.waitForTimeout(700);
 
-                // Try clicking "Reveal price" if it appears and is active
-                try {
-                    const revealBtn = await page.$('button.btn-primary:has-text("Reveal price")');
-                    if (revealBtn && !(await revealBtn.isDisabled())) {
-                        log('Clicking "Reveal price" button...');
-                        await revealBtn.click();
-                    }
-                } catch (e) {
-                    // Ignore if button not found or not clickable
-                }
+                // Wait for the "Reveal price" button to appear, then use Playwright's native
+                // actionability (.click with a bounded timeout) which internally waits for the
+                // element to be enabled + stable before clicking. If it never becomes enabled
+                // within 2000ms, click() throws, and the normal retry mechanism handles it.
+                // This eliminates both the silent-skip race condition and the 6s price-success waste.
+                log('Waiting for "Reveal price" button to be enabled...');
+                const revealBtn = page.locator('button.btn-primary:has-text("Reveal price")');
+                await revealBtn.waitFor({ state: 'visible', timeout: 2000 });
+                log('Clicking "Reveal price" button...');
+                await revealBtn.click({ timeout: 2000 });
                 
                 log('Waiting for price to become available...');
                 // Wait for the success state of the price block
