@@ -4,7 +4,7 @@ const { chromium } = require('playwright');
 const CONFIG = {
     MAX_ATTEMPTS: 3,
     TIMEOUT_MS: 15000,
-    RETRY_DELAY_MS: 2000,
+    RETRY_DELAY_MS: 1000,
 };
 
 function log(msg) {
@@ -121,7 +121,7 @@ async function scrapeProduct(productUrl, options = {}) {
                 
                 log('Waiting for price to become available...');
                 // Wait for the success state of the price block
-                await page.waitForSelector('.price-success', { timeout: 10000 });
+                await page.waitForSelector('.price-success', { timeout: 6000 });
                 const priceText = await page.evaluate(() => {
                     const main = document.querySelector('.price-main');
                     if (!main) return '';
